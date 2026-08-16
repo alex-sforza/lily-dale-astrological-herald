@@ -1,0 +1,40 @@
+name: Add image zoom
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  add-zoom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add image zoom styles and script
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          if 'image-zoom-button' not in s:
+              css = '''\n  .picture-placeholder { position: relative; }\n\n  .image-zoom-button {\n    position: absolute;\n    right: 7px;\n    bottom: 7px;\n    z-index: 3;\n    border: 3px solid #62437e;\n    background: rgba(12, 10, 20, .94);\n    color: #eee7f5;\n    padding: 6px 8px;\n    font-size: 10px;\n    line-height: 1;\n    cursor: pointer;\n    box-shadow: 3px 3px 0 #08070c;\n    text-transform: uppercase;\n  }\n\n  .image-zoom-button:hover {\n    background: #4a3165;\n    border-color: #8760a7;\n    color: #fff;\n  }\n\n  body.lightbox-open { overflow: hidden; }\n\n  .image-lightbox {\n    position: fixed;\n    inset: 0;\n    z-index: 9999;\n    display: none;\n    align-items: center;\n    justify-content: center;\n    padding: 24px;\n    background: rgba(4, 3, 9, .92);\n    cursor: zoom-out;\n  }\n\n  .image-lightbox.open { display: flex; }\n\n  .image-lightbox-inner {\n    position: relative;\n    max-width: min(1100px, 94vw);\n    max-height: 94vh;\n    padding: 8px;\n    border: 4px solid #8a6438;\n    background: #080810;\n    box-shadow: 8px 8px 0 #1e1727;\n    cursor: default;\n  }\n\n  .image-lightbox-img {\n    display: block;\n    max-width: calc(94vw - 16px);\n    max-height: calc(94vh - 16px);\n    width: auto;\n    height: auto;\n    object-fit: contain;\n    image-rendering: pixelated;\n  }\n\n  .image-lightbox-close {\n    position: absolute;\n    top: 7px;\n    right: 7px;\n    z-index: 2;\n    width: 34px;\n    height: 34px;\n    border: 3px solid #62437e;\n    background: rgba(12, 10, 20, .96);\n    color: #eee7f5;\n    font-size: 18px;\n    line-height: 1;\n    cursor: pointer;\n    box-shadow: 3px 3px 0 #08070c;\n  }\n\n  .image-lightbox-close:hover {\n    background: #4a3165;\n    border-color: #8760a7;\n  }\n'''
+              s = s.replace('</style>', css + '\n</style>')
+              s = s.replace('</body>', '  <script src="./image-zoom.js"></script>\n</body>')
+              p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add enlarge image button and lightbox"
+          git push

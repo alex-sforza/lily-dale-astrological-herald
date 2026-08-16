@@ -1,0 +1,38 @@
+name: Fix oracle runtime
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove unstable ResizeObserver loop
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '''  // Generated text can change the natural height slightly.\n  const oracleForFit = document.querySelector(".oracle");\n  if (oracleForFit && "ResizeObserver" in window) {\n    new ResizeObserver(scheduleOracleFit).observe(oracleForFit);\n  }\n\n  // Initial fit after fonts/layout have settled.\n  setTimeout(scheduleOracleFit, 50);'''
+          new = '''  // Initial fit after fonts/layout and the first image have settled.\n  setTimeout(scheduleOracleFit, 100);'''
+          if old in s:
+              p.write_text(s.replace(old, new), encoding='utf-8')
+          PY
+
+      - name: Commit fix
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix oracle viewport runtime loop"
+          git push

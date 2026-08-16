@@ -638,7 +638,7 @@ function generate(mode="random") {
   document.getElementById("prediction").textContent = prediction;
 
   const predictionImage = document.getElementById("predictionImage");
-  const imageNumber = Math.floor(Math.random() * 50) + 1;
+  const imageNumber = Math.floor(Math.random() * 100) + 1;
   predictionImage.src = `./assets/pic-${imageNumber}.png`;
   predictionImage.alt = `Звёздная картина №${imageNumber}`;
 
